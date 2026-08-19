@@ -1,4 +1,4 @@
-# COINGECKO-market-api
+# coingecko-market-api
 
 A small service that pulls cryptocurrency market data from the public CoinGecko API, keeps only the fields worth keeping, and returns a single aggregated snapshot of the market: totals across the coins it scanned, how many are up or down over 24 hours, and the leaders by market cap, volume and price change.
 
