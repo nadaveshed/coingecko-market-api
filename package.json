@@ -1,5 +1,5 @@
 {
-  "name": "coingecko-insights-api",
+  "name": "coingecko-market-api",
   "version": "1.0.0",
   "private": true,
   "type": "module",

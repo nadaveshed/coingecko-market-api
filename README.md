@@ -1,4 +1,4 @@
-# Market Overview API
+# COINGECKO-market-api
 
 A small service that pulls cryptocurrency market data from the public CoinGecko API, keeps only the fields worth keeping, and returns a single aggregated snapshot of the market: totals across the coins it scanned, how many are up or down over 24 hours, and the leaders by market cap, volume and price change.
 
@@ -32,8 +32,8 @@ npm start
 Or with Docker:
 
 ```bash
-docker build -t market-overview-api .
-docker run --rm -p 8000:8000 --env-file .env market-overview-api
+docker build -t coingecko-market-api .
+docker run --rm -p 8000:8000 --env-file .env coingecko-market-api
 ```
 
 Copy `.env.example` to `.env` for the upstream URL and an optional API key. If you deploy behind a trusted reverse proxy, set `APP_TRUST_PROXY=true` so rate limiting uses the forwarded client address — leave it off when the app is directly exposed. Everything else (cache TTL, timeouts, concurrency, rate limits, aggregation thresholds) lives in `src/config/index.ts`.

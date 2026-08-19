@@ -38,7 +38,7 @@ export const defaults: Config = {
   topMarketCapCount: 20,
   topMoversCount: 10,
   dataSource: "coingecko",
-  userAgent: "market-overview-api/1.0",
+  userAgent: "coingecko-market-api/1.0",
   logLevel: "info",
   host: "0.0.0.0",
   port: 8000,
