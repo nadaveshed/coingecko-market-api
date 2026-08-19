@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CoinGecko Insights</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <p class="eyebrow">CoinGecko Insights API</p>
+        <h1>סקירת שוק קריפטו</h1>
+        <p class="lede">נתוני שוק בזמן אמת — מחירים, market cap, volume ושינויים ב-24 שעות.</p>
+      </header>
+
+      <form id="search-form" class="search">
+        <label class="field">
+          <span>מטבע בסיס</span>
+          <select id="currency" name="currency"></select>
+        </label>
+        <label class="field">
+          <span>עמוד התחלה</span>
+          <input id="page" name="page" type="number" min="1" required />
+        </label>
+        <label class="field grow">
+          <span>כמות מטבעות</span>
+          <input id="limit" name="limit" type="number" min="1" required />
+        </label>
+        <button type="submit">טען נתונים</button>
+      </form>
+
+      <p id="status" class="status" hidden></p>
+      <section id="result" class="result" hidden></section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
