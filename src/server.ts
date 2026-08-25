@@ -7,26 +7,9 @@ import { errorHandler, notFoundHandler, rateLimit, requestId } from "./middlewar
 import { registerRoutes } from "./routes/index.js";
 import { MarketService, CoinGeckoClient } from "./services/index.js";
 import type { AppOptions, OverviewResponse } from "./types/index.js";
-import { TtlCache, BoundedLimiter, Singleflight, RateLimiter } from "./utils/index.js";
+import { TtlCache, BoundedLimiter, Singleflight, RateLimiter, createLogger } from "./utils/index.js";
 
 const PUBLIC_DIR = fileURLToPath(new URL("../public", import.meta.url));
-
-interface Logger {
-  warn(context: Record<string, unknown>, message: string): void;
-  error(error: unknown): void;
-}
-
-function createLogger(level: string): Logger {
-  const silent = level === "silent";
-  return {
-    warn(context, message) {
-      if (!silent) console.warn(JSON.stringify({ level: "warn", message, ...context }));
-    },
-    error(error) {
-      if (!silent) console.error(error);
-    },
-  };
-}
 
 /** Builds the wired app without binding a port, so tests can drive it in-process. */
 export async function createApp(options: AppOptions = {}): Promise<Express> {
