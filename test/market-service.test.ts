@@ -114,3 +114,10 @@ test("rejects bad currency", async () => {
     InvalidQueryError,
   );
 });
+
+test("perPage overrides the configured page size", async () => {
+  const upstream = new FakeUpstream();
+  const result = await service(upstream).overview({ currency: "usd", page: 1, limit: 4, perPage: 4 });
+  assert.deepEqual(upstream.calls, [1]);
+  assert.equal(result.fetch.per_page, 4);
+});

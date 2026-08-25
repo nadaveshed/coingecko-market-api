@@ -11,6 +11,7 @@ export function overviewQuerySchema(config: Config) {
       .default(config.defaultCurrency)
       .transform((v) => v.toLowerCase()),
     page: z.coerce.number().int().min(1).max(config.maxQueryPage).default(config.defaultPage),
+    per_page: z.coerce.number().int().min(1).max(config.maxQueryPerPage).default(config.defaultPageSize),
     limit: z.coerce.number().int().min(1).max(config.maxQueryLimit).default(config.defaultLimit),
   });
 }

@@ -51,6 +51,7 @@ export function buildOverview(
   coins: Coin[],
   args: {
     requestedPages: number[];
+    perPage: number;
     fetchedPages: number[];
     failedPages: number[];
     currency: string;
@@ -71,6 +72,7 @@ export function buildOverview(
   return {
     fetch: {
       requested_pages: args.requestedPages,
+      per_page: args.perPage,
       fetched_pages: [...args.fetchedPages].sort((a, b) => a - b),
       failed_pages: [...args.failedPages].sort((a, b) => a - b),
       degraded: args.failedPages.length > 0,

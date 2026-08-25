@@ -30,14 +30,19 @@ docker run --rm -p 8000:8000 --env-file .env coingecko-market-api
 ## API
 
 ```http
-GET /api/market/overview?currency=usd&page=1&limit=200
+GET /api/market/overview?currency=usd&page=1&per_page=100&limit=200
 ```
 
-| Parameter  | Default | Valid values               |
-| ---------- | ------- | -------------------------- |
-| `currency` | `usd`   | `usd`, `eur`, `gbp`, `ils` |
-| `page`     | `1`     | CoinGecko starting page    |
-| `limit`    | `100`   | 1–500 coins                |
+| Parameter  | Default | Valid values                  |
+| ---------- | ------- | ----------------------------- |
+| `currency` | `usd`   | `usd`, `eur`, `gbp`, `ils`    |
+| `page`     | `1`     | 1–20, starting page           |
+| `per_page` | `100`   | 1–250 coins per upstream page |
+| `limit`    | `100`   | 1–500 coins returned          |
+
+`page` is an offset expressed in pages of `per_page` coins, so `page=2&per_page=100` starts at rank 101.
+At most 5 upstream pages are fetched per request, so a `limit` above `per_page × 5` returns fewer coins
+than asked; `fetch.per_page` and `fetch.requested_pages` report exactly what was used.
 
 The response contains `fetch`, `universe`, `top_market_cap`, `top_volume`, `top_gainers`, `top_losers`, and `meta`. Coin objects contain only `id`, `symbol`, `name`, `rank`, `price`, `market_cap`, `volume_24h`, and `change_24h_pct`.
 

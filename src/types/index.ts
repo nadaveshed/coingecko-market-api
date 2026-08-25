@@ -27,6 +27,7 @@ export interface Config {
   defaultLimit: number;
   maxQueryPage: number;
   maxQueryLimit: number;
+  maxQueryPerPage: number;
   uiDefaultLimit: number;
   largeCapThreshold: number;
   midCapThreshold: number;
@@ -65,6 +66,7 @@ export interface CoinGeckoMarketRow {
 
 export interface FetchStatus {
   requested_pages: number[];
+  per_page: number;
   fetched_pages: number[];
   failed_pages: number[];
   degraded: boolean;

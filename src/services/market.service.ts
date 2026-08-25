@@ -26,25 +26,34 @@ export class MarketService {
     private readonly logger?: MarketLogger,
   ) {}
 
-  async overview(args: { currency: string; page: number; limit: number }): Promise<OverviewResponse> {
+  async overview(args: { currency: string; page: number; limit: number; perPage?: number }): Promise<OverviewResponse> {
     const vs = this.normalizeCurrency(args.currency);
     const startPage = positive("page", args.page);
     const total = positive("limit", args.limit);
-    const pages = pagePlan(startPage, total, this.config.defaultPageSize, this.config.maxPages);
-    const cacheKey = `overview:${vs}:${startPage}:${total}:${this.config.defaultPageSize}`;
+    const perPage = positive("per_page", args.perPage ?? this.config.defaultPageSize);
+    const pages = pagePlan(startPage, total, perPage, this.config.maxPages);
+    const cacheKey = `overview:${vs}:${startPage}:${total}:${perPage}`;
 
     const cached = this.cache.get(cacheKey);
     if (cached) {
       return { ...cached, meta: { ...cached.meta, cache: "hit", coalesced: false } };
     }
 
-    const { value, coalesced } = await this.singleflight.do(cacheKey, () => this.load(vs, pages, total, cacheKey));
+    const { value, coalesced } = await this.singleflight.do(cacheKey, () =>
+      this.load(vs, pages, total, perPage, cacheKey),
+    );
     if (coalesced) return { ...value, meta: { ...value.meta, coalesced: true } };
     return value;
   }
 
-  private async load(vsCurrency: string, pages: number[], limit: number, cacheKey: string): Promise<OverviewResponse> {
-    const results = await Promise.allSettled(pages.map((pageNo) => this.fetchPage(vsCurrency, pageNo)));
+  private async load(
+    vsCurrency: string,
+    pages: number[],
+    limit: number,
+    perPage: number,
+    cacheKey: string,
+  ): Promise<OverviewResponse> {
+    const results = await Promise.allSettled(pages.map((pageNo) => this.fetchPage(vsCurrency, pageNo, perPage)));
 
     const coins: Coin[] = [];
     const fetched: number[] = [];
@@ -78,6 +87,7 @@ export class MarketService {
       coins.slice(0, limit),
       {
         requestedPages: pages,
+        perPage,
         fetchedPages: fetched,
         failedPages: failed,
         currency: vsCurrency,
@@ -90,10 +100,8 @@ export class MarketService {
     return overview;
   }
 
-  private async fetchPage(vsCurrency: string, page: number): Promise<Coin[]> {
-    const raw = await this.limiter.run(() =>
-      this.upstream.markets({ vsCurrency, page, perPage: this.config.defaultPageSize }),
-    );
+  private async fetchPage(vsCurrency: string, page: number, perPage: number): Promise<Coin[]> {
+    const raw = await this.limiter.run(() => this.upstream.markets({ vsCurrency, page, perPage }));
     return parsePage(raw);
   }
 

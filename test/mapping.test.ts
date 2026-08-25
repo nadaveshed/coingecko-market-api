@@ -41,7 +41,15 @@ test("aggregation counts and rankings", () => {
   const coins = parsePage([BTC, ETH, TINY]);
   const overview = buildOverview(
     coins,
-    { requestedPages: [1], fetchedPages: [1], failedPages: [], currency: "usd", cache: "miss", coalesced: false },
+    {
+      requestedPages: [1],
+      perPage: 100,
+      fetchedPages: [1],
+      failedPages: [],
+      currency: "usd",
+      cache: "miss",
+      coalesced: false,
+    },
     defaults,
   );
   assert.equal(overview.universe.count, 3);
@@ -68,7 +76,15 @@ test("aggregation reports missing metrics separately", () => {
   assert.ok(unknown);
   const overview = buildOverview(
     [unknown],
-    { requestedPages: [1], fetchedPages: [1], failedPages: [], currency: "usd", cache: "miss", coalesced: false },
+    {
+      requestedPages: [1],
+      perPage: 100,
+      fetchedPages: [1],
+      failedPages: [],
+      currency: "usd",
+      cache: "miss",
+      coalesced: false,
+    },
     defaults,
   );
   assert.equal(overview.universe.flat, 0);

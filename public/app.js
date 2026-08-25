@@ -4,6 +4,7 @@ const resultEl = document.querySelector("#result");
 const button = form.querySelector("button");
 const currencySelect = document.querySelector("#currency");
 const pageInput = document.querySelector("#page");
+const perPageInput = document.querySelector("#per-page");
 const limitInput = document.querySelector("#limit");
 
 loadUiDefaults();
@@ -16,6 +17,7 @@ form.addEventListener("submit", async (event) => {
   const params = new URLSearchParams({
     currency: currencySelect.value,
     page: pageInput.value,
+    per_page: perPageInput.value,
     limit: limitInput.value,
   });
   try {
@@ -46,6 +48,8 @@ async function loadUiDefaults() {
       currencySelect.appendChild(opt);
     }
     pageInput.value = String(config.page);
+    perPageInput.value = String(config.perPage);
+    perPageInput.max = String(config.maxPerPage);
     limitInput.value = String(config.limit);
     limitInput.max = String(config.maxLimit);
   } catch {}
@@ -62,6 +66,7 @@ function render(data) {
       <span class="pill ${data.meta.cache === "hit" ? "hit" : ""}">cache: ${data.meta.cache}</span>
       ${data.meta.coalesced ? '<span class="pill">coalesced</span>' : ""}
       ${f.degraded ? '<span class="pill degraded">degraded</span>' : '<span class="pill ok">תקין</span>'}
+      <span class="pill">${f.per_page} לעמוד</span>
       <span class="pill">עמודים: ${f.fetched_pages.join(", ") || "—"}${f.failed_pages.length ? " | נכשלו: " + f.failed_pages.join(", ") : ""}</span>
     </div>
 

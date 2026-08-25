@@ -146,3 +146,60 @@ test("overview rejects short currency", async () => {
     await app.close();
   }
 });
+
+test("per_page controls how many upstream pages are fetched", async () => {
+  const upstream = new FakeUpstream();
+  const app = await buildApp({ upstream });
+  try {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/market/overview?currency=usd&page=1&per_page=4&limit=4",
+    });
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(upstream.calls, [1]);
+    assert.equal(response.json().fetch.per_page, 4);
+  } finally {
+    await app.close();
+  }
+});
+
+test("per_page falls back to the configured page size", async () => {
+  const upstream = new FakeUpstream();
+  const app = await buildApp({ upstream });
+  try {
+    const response = await app.inject({ method: "GET", url: "/api/market/overview?currency=usd&page=1&limit=4" });
+    assert.deepEqual(upstream.calls, [1, 2]);
+    assert.equal(response.json().fetch.per_page, 2);
+  } finally {
+    await app.close();
+  }
+});
+
+test("per_page is part of the cache key", async () => {
+  const app = await buildApp({ upstream: new FakeUpstream() });
+  try {
+    const first = await app.inject({
+      method: "GET",
+      url: "/api/market/overview?currency=usd&page=1&per_page=2&limit=4",
+    });
+    const second = await app.inject({
+      method: "GET",
+      url: "/api/market/overview?currency=usd&page=1&per_page=4&limit=4",
+    });
+    assert.equal(first.headers["x-cache"], "miss");
+    assert.equal(second.headers["x-cache"], "miss");
+  } finally {
+    await app.close();
+  }
+});
+
+test("per_page above the cap is rejected", async () => {
+  const app = await buildApp();
+  try {
+    const response = await app.inject({ method: "GET", url: "/api/market/overview?per_page=999" });
+    assert.equal(response.statusCode, 422);
+    assert.equal(response.json().error, "validation_error");
+  } finally {
+    await app.close();
+  }
+});

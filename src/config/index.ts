@@ -31,6 +31,7 @@ export const defaults: Config = {
   defaultLimit: 100,
   maxQueryPage: 20,
   maxQueryLimit: 500,
+  maxQueryPerPage: 250,
   uiDefaultLimit: 200,
   largeCapThreshold: 10_000_000_000,
   midCapThreshold: 1_000_000_000,
