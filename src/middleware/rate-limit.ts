@@ -1,22 +1,27 @@
-import type { FastifyInstance } from "fastify";
+import type { NextFunction, Request, Response } from "express";
 
 import type { Config } from "../types/index.js";
+import type { RateLimiter } from "../utils/index.js";
 
-export function registerRateLimitHook(app: FastifyInstance, config: Config) {
-  app.addHook("onRequest", async (request, reply) => {
-    const path = request.url.split("?")[0] ?? request.url;
-    if (config.rateLimitExemptPaths.includes(path) || path.startsWith(config.rateLimitExemptPrefix)) {
+export function rateLimit(config: Config, limiter: RateLimiter | null) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const exempt = config.rateLimitExemptPaths.includes(req.path) || req.path.startsWith(config.rateLimitExemptPrefix);
+    if (!limiter || exempt) {
+      next();
       return;
     }
-    if (!app.rateLimiter) {
+
+    const { allowed, retryAfter } = limiter.check(req.ip || "anonymous");
+    if (allowed) {
+      next();
       return;
     }
-    const { allowed, retryAfter } = app.rateLimiter.check(request.ip || "anonymous");
-    if (!allowed) {
-      return reply
-        .status(429)
-        .header("Retry-After", String(retryAfter))
-        .send({ error: "rate_limited", detail: "Too many requests. Try again later.", request_id: request.id });
-    }
-  });
+
+    res.setHeader("Retry-After", String(retryAfter));
+    res.status(429).json({
+      error: "rate_limited",
+      detail: "Too many requests. Try again later.",
+      request_id: req.id,
+    });
+  };
 }

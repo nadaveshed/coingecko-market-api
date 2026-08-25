@@ -1,5 +1,18 @@
 import type { Config } from "../types/index.js";
-import { RetryableUpstreamError, UpstreamTimeoutError, UpstreamUnavailableError, withRetries } from "../utils/index.js";
+import { AppError, UpstreamTimeoutError, UpstreamUnavailableError, withRetries } from "../utils/index.js";
+
+const MARKETS_PATH = "/coins/markets";
+const ORDER = "market_cap_desc";
+const PRICE_CHANGE = "24h";
+const API_KEY_HEADER = "x-cg-demo-api-key";
+const USER_AGENT = "coingecko-market-api/1.0";
+
+/** Marks an error as worth retrying, so call sites read `throw retryable(new ...)`. */
+function retryable<E extends AppError>(error: E, retryAfter?: number): E {
+  error.retryable = true;
+  error.retryAfter = retryAfter;
+  return error;
+}
 
 export class CoinGeckoClient {
   constructor(
@@ -8,35 +21,29 @@ export class CoinGeckoClient {
   ) {}
 
   async markets(args: { vsCurrency: string; page: number; perPage: number }): Promise<unknown> {
-    const url = new URL(`${this.config.coingeckoBaseUrl}${this.config.coingeckoMarketsPath}`);
+    const url = new URL(`${this.config.coingeckoBaseUrl}${MARKETS_PATH}`);
     url.searchParams.set("vs_currency", args.vsCurrency);
-    url.searchParams.set("order", this.config.coingeckoOrder);
+    url.searchParams.set("order", ORDER);
     url.searchParams.set("per_page", String(args.perPage));
     url.searchParams.set("page", String(args.page));
-    url.searchParams.set("sparkline", String(this.config.coingeckoSparkline));
-    url.searchParams.set("price_change_percentage", this.config.coingeckoPriceChange);
+    url.searchParams.set("sparkline", "false");
+    url.searchParams.set("price_change_percentage", PRICE_CHANGE);
 
-    try {
-      return await withRetries(() => this.get(url), {
-        maxAttempts: this.config.maxAttempts,
-        backoffSeconds: this.config.retryBackoffSeconds,
-        shouldRetry: (error) => error instanceof RetryableUpstreamError,
-        retryAfterSeconds: (error) => (error instanceof RetryableUpstreamError ? error.retryAfter : undefined),
-      });
-    } catch (error) {
-      if (error instanceof RetryableUpstreamError) throw error.wrapped;
-      throw error;
-    }
+    return withRetries(() => this.get(url), {
+      maxAttempts: this.config.maxAttempts,
+      backoffSeconds: this.config.retryBackoffSeconds,
+      shouldRetry: (error) => error instanceof AppError && error.retryable,
+      retryAfterSeconds: (error) => (error instanceof AppError ? error.retryAfter : undefined),
+    });
   }
 
   private async get(url: URL): Promise<unknown> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.config.requestTimeoutSeconds * 1000);
-    const retryable = new Set(this.config.retryableStatusCodes);
 
-    const headers: Record<string, string> = { Accept: "application/json", "User-Agent": this.config.userAgent };
+    const headers: Record<string, string> = { Accept: "application/json", "User-Agent": USER_AGENT };
     if (this.config.coingeckoApiKey) {
-      headers[this.config.coingeckoApiKeyHeader] = this.config.coingeckoApiKey;
+      headers[API_KEY_HEADER] = this.config.coingeckoApiKey;
     }
 
     let response: Response;
@@ -44,23 +51,21 @@ export class CoinGeckoClient {
       response = await this.fetchFn(url, { signal: controller.signal, headers });
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
-        throw new RetryableUpstreamError(new UpstreamTimeoutError("The upstream market API timed out."));
+        throw retryable(new UpstreamTimeoutError("The upstream market API timed out."));
       }
-      throw new RetryableUpstreamError(new UpstreamUnavailableError("Could not reach the upstream market API."));
+      throw retryable(new UpstreamUnavailableError("Could not reach the upstream market API."));
     } finally {
       clearTimeout(timer);
     }
 
     if (response.status === 429) {
-      throw new RetryableUpstreamError(
+      throw retryable(
         new UpstreamUnavailableError("Upstream market API rate-limited the request."),
         this.retryAfter(response),
       );
     }
-    if (retryable.has(response.status)) {
-      throw new RetryableUpstreamError(
-        new UpstreamUnavailableError(`Upstream market API returned HTTP ${response.status}.`),
-      );
+    if (this.config.retryableStatusCodes.includes(response.status)) {
+      throw retryable(new UpstreamUnavailableError(`Upstream market API returned HTTP ${response.status}.`));
     }
     if (response.status >= 400) {
       throw new UpstreamUnavailableError(`Upstream market API returned HTTP ${response.status}.`);
@@ -72,8 +77,9 @@ export class CoinGeckoClient {
     } catch {
       throw new UpstreamUnavailableError("Upstream market API returned invalid JSON.");
     }
-    if (!Array.isArray(payload))
+    if (!Array.isArray(payload)) {
       throw new UpstreamUnavailableError("Upstream market API returned an unexpected payload shape.");
+    }
     return payload;
   }
 

@@ -1,5 +1,7 @@
 export class AppError extends Error {
   readonly headers: Record<string, string>;
+  retryable = false;
+  retryAfter?: number;
 
   constructor(
     readonly code: string,
@@ -40,15 +42,5 @@ export class InvalidUpstreamPayloadError extends AppError {
 export class RateLimitExceededError extends AppError {
   constructor(detail: string, retryAfter: number) {
     super("rate_limited", 429, detail, { "Retry-After": String(retryAfter) });
-  }
-}
-
-export class RetryableUpstreamError extends Error {
-  constructor(
-    readonly wrapped: AppError,
-    readonly retryAfter?: number,
-  ) {
-    super(wrapped.detail);
-    this.name = "RetryableUpstreamError";
   }
 }

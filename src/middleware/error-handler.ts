@@ -1,34 +1,22 @@
-import type { FastifyError, FastifyInstance } from "fastify";
+import type { NextFunction, Request, Response } from "express";
 
 import { AppError } from "../utils/errors.js";
 
-export function registerErrorHandler(app: FastifyInstance) {
-  app.setErrorHandler((error, request, reply) => {
+export function notFoundHandler(req: Request, res: Response): void {
+  res.status(404).json({ error: "not_found", detail: "Route not found.", request_id: req.id });
+}
+
+export function errorHandler(logError: (error: unknown) => void) {
+  return (error: unknown, req: Request, res: Response, _next: NextFunction): void => {
     if (error instanceof AppError) {
       for (const [key, value] of Object.entries(error.headers)) {
-        reply.header(key, value);
+        res.setHeader(key, value);
       }
-      return reply.status(error.statusCode).send({
-        error: error.code,
-        detail: error.detail,
-        request_id: request.id,
-      });
+      res.status(error.statusCode).json({ error: error.code, detail: error.detail, request_id: req.id });
+      return;
     }
 
-    const fastifyError = error as FastifyError;
-    if (fastifyError.validation || fastifyError.code === "FST_ERR_VALIDATION") {
-      return reply.status(422).send({
-        error: "validation_error",
-        detail: "Request validation failed.",
-        request_id: request.id,
-      });
-    }
-
-    request.log.error(error);
-    return reply.status(500).send({
-      error: "internal_error",
-      detail: "Internal server error.",
-      request_id: request.id,
-    });
-  });
+    logError(error);
+    res.status(500).json({ error: "internal_error", detail: "Internal server error.", request_id: req.id });
+  };
 }

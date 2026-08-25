@@ -3,7 +3,6 @@ export {
   InvalidQueryError,
   InvalidUpstreamPayloadError,
   RateLimitExceededError,
-  RetryableUpstreamError,
   UpstreamTimeoutError,
   UpstreamUnavailableError,
 } from "./errors.js";

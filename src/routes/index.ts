@@ -1,16 +1,22 @@
-import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import type { Express, Request, Response } from "express";
 
 import { getHealth, getReady, getOverview, getUiConfig } from "../controllers/index.js";
-import { validate } from "../middleware/validate.js";
+import { validate } from "../middleware/index.js";
+import type { MarketService } from "../services/index.js";
+import type { Config } from "../types/index.js";
 import { overviewQuerySchema } from "./schemas.js";
 
-export async function registerRoutes(app: FastifyInstance) {
+export function registerRoutes(
+  app: Express,
+  deps: { config: Config; marketService: MarketService; publicDir: string },
+): void {
   app.get("/health", getHealth);
   app.get("/ready", getReady);
-  app.get("/api/config/ui", getUiConfig);
+  app.get("/api/config/ui", getUiConfig(deps.config));
 
-  const schema = overviewQuerySchema(app.config);
-  app.get("/api/market/overview", { preHandler: validate(schema) }, getOverview);
+  app.get("/api/market/overview", validate(overviewQuerySchema(deps.config)), getOverview(deps.marketService));
 
-  app.get("/", async (_request: FastifyRequest, reply: FastifyReply) => reply.sendFile("index.html"));
+  app.get("/", (_req: Request, res: Response) => {
+    res.sendFile("index.html", { root: deps.publicDir });
+  });
 }

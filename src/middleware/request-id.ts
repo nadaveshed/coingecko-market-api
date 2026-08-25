@@ -1,8 +1,10 @@
-import type { FastifyInstance } from "fastify";
+import { randomUUID } from "node:crypto";
 
-export function registerRequestIdHook(app: FastifyInstance) {
-  app.addHook("onSend", async (request, reply, payload) => {
-    reply.header("X-Request-ID", request.id);
-    return payload;
-  });
+import type { NextFunction, Request, Response } from "express";
+
+export function requestId(req: Request, res: Response, next: NextFunction): void {
+  const header = req.headers["x-request-id"];
+  req.id = typeof header === "string" && header.length > 0 ? header : randomUUID();
+  res.setHeader("X-Request-ID", req.id);
+  next();
 }

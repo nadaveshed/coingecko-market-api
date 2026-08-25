@@ -1,11 +1,6 @@
 export interface Config {
   coingeckoBaseUrl: string;
   coingeckoApiKey: string;
-  coingeckoApiKeyHeader: string;
-  coingeckoMarketsPath: string;
-  coingeckoOrder: string;
-  coingeckoSparkline: boolean;
-  coingeckoPriceChange: string;
   requestTimeoutSeconds: number;
   maxAttempts: number;
   retryBackoffSeconds: number;
@@ -35,7 +30,6 @@ export interface Config {
   topMarketCapCount: number;
   topMoversCount: number;
   dataSource: string;
-  userAgent: string;
   logLevel: string;
   host: string;
   port: number;

@@ -1,6 +1,6 @@
 # coingecko-market-api
 
-A lightweight TypeScript/Fastify service that fetches public CoinGecko market data, keeps eight useful fields, and returns market totals, cap buckets, and leaders by market cap, volume, gain, and loss. A small UI is available at the root URL.
+A lightweight TypeScript/Express service that fetches public CoinGecko market data, keeps eight useful fields, and returns market totals, cap buckets, and leaders by market cap, volume, gain, and loss. A small UI is available at the root URL.
 
 ## Run
 

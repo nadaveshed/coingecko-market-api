@@ -1,7 +1,9 @@
-export async function getHealth() {
-  return { status: "ok" };
+import type { Request, Response } from "express";
+
+export function getHealth(_req: Request, res: Response): void {
+  res.json({ status: "ok" });
 }
 
-export async function getReady() {
-  return { status: "ready" };
+export function getReady(_req: Request, res: Response): void {
+  res.json({ status: "ready" });
 }

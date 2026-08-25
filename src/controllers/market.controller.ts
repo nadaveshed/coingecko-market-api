@@ -1,28 +1,31 @@
-import type { FastifyReply, FastifyRequest } from "fastify";
+import type { Request, Response } from "express";
 
-interface OverviewQuery {
-  validatedQuery: { currency: string; page: number; per_page: number; limit: number };
+import type { MarketService } from "../services/index.js";
+import type { Config } from "../types/index.js";
+
+export function getOverview(marketService: MarketService) {
+  return async (req: Request, res: Response): Promise<void> => {
+    const { currency, page, per_page: perPage, limit } = req.validatedQuery;
+    const result = await marketService.overview({ currency, page, perPage, limit });
+
+    res.setHeader("X-Cache", result.meta.cache);
+    if (result.fetch.degraded) {
+      res.setHeader("X-Degraded", "true");
+    }
+    res.json(result);
+  };
 }
 
-export async function getOverview(request: FastifyRequest, reply: FastifyReply) {
-  const { currency, page, per_page: perPage, limit } = (request as unknown as OverviewQuery).validatedQuery;
-  const result = await request.server.marketService.overview({ currency, page, perPage, limit });
-  reply.header("X-Cache", result.meta.cache);
-  if (result.fetch.degraded) {
-    reply.header("X-Degraded", "true");
-  }
-  return result;
-}
-
-export async function getUiConfig(request: FastifyRequest) {
-  const config = request.server.config;
-  return {
-    currency: config.defaultCurrency,
-    page: config.defaultPage,
-    limit: config.uiDefaultLimit,
-    maxLimit: config.maxQueryLimit,
-    perPage: config.defaultPageSize,
-    maxPerPage: config.maxQueryPerPage,
-    allowedCurrencies: config.allowedCurrencies,
+export function getUiConfig(config: Config) {
+  return (_req: Request, res: Response): void => {
+    res.json({
+      currency: config.defaultCurrency,
+      page: config.defaultPage,
+      limit: config.uiDefaultLimit,
+      maxLimit: config.maxQueryLimit,
+      perPage: config.defaultPageSize,
+      maxPerPage: config.maxQueryPerPage,
+      allowedCurrencies: config.allowedCurrencies,
+    });
   };
 }

@@ -1,20 +1,15 @@
-import type { FastifyReply, FastifyRequest } from "fastify";
-import type { ZodSchema, ZodError } from "zod";
+import type { NextFunction, Request, Response } from "express";
+import type { ZodSchema } from "zod";
 
 export function validate<T>(schema: ZodSchema<T>) {
-  return (request: FastifyRequest, reply: FastifyReply, done: (err?: Error) => void) => {
-    const result = schema.safeParse(request.query);
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const result = schema.safeParse(req.query);
     if (!result.success) {
-      const zodError = result.error as ZodError;
-      const detail = zodError.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
-      reply.status(422).send({
-        error: "validation_error",
-        detail,
-        request_id: request.id,
-      });
+      const detail = result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
+      res.status(422).json({ error: "validation_error", detail, request_id: req.id });
       return;
     }
-    (request as unknown as { validatedQuery: T }).validatedQuery = result.data;
-    done();
+    req.validatedQuery = result.data as Request["validatedQuery"];
+    next();
   };
 }
