@@ -6,17 +6,10 @@ import { loadConfig } from "./config/index.js";
 import { errorHandler, notFoundHandler, rateLimit, requestId } from "./middleware/index.js";
 import { registerRoutes } from "./routes/index.js";
 import { MarketService, CoinGeckoClient } from "./services/index.js";
-import type { Config, MarketUpstream, OverviewResponse } from "./types/index.js";
+import type { AppOptions, OverviewResponse } from "./types/index.js";
 import { TtlCache, BoundedLimiter, Singleflight, RateLimiter } from "./utils/index.js";
 
 const PUBLIC_DIR = fileURLToPath(new URL("../public", import.meta.url));
-
-export interface AppOptions {
-  config?: Partial<Config>;
-  upstream?: MarketUpstream;
-  cache?: TtlCache<OverviewResponse>;
-  logger?: boolean | { level: string };
-}
 
 interface Logger {
   warn(context: Record<string, unknown>, message: string): void;

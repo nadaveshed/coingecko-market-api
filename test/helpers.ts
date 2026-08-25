@@ -1,6 +1,7 @@
 import request from "supertest";
 
-import { createApp, type AppOptions } from "../src/server.js";
+import { createApp } from "../src/server.js";
+import type { AppOptions } from "../src/types/index.js";
 import type { Config } from "../src/types/index.js";
 import { FakeUpstream } from "./fakes.js";
 

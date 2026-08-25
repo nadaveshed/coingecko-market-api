@@ -1,3 +1,5 @@
+import type { TtlCache } from "../utils/cache.js";
+
 export interface Config {
   coingeckoBaseUrl: string;
   coingeckoApiKey: string;
@@ -106,4 +108,11 @@ export interface ErrorResponse {
 
 export interface MarketUpstream {
   markets(args: { vsCurrency: string; page: number; perPage: number }): Promise<unknown>;
+}
+
+export interface AppOptions {
+  config?: Partial<Config>;
+  upstream?: MarketUpstream;
+  cache?: TtlCache<OverviewResponse>;
+  logger?: boolean | { level: string };
 }
