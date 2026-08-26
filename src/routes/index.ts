@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 
-import { getHealth, getReady, getOverview, getUiConfig } from "../controllers/index.js";
+import { getHealth, getReady, getOverview, createUiConfigHandler } from "../controllers/index.js";
 import { validate } from "../middleware/index.js";
 import type { MarketService } from "../services/index.js";
 import type { Config } from "../types/index.js";
@@ -12,7 +12,7 @@ export function registerRoutes(
 ): void {
   app.get("/health", getHealth);
   app.get("/ready", getReady);
-  app.get("/api/config/ui", getUiConfig(deps.config));
+  app.get("/api/config/ui", createUiConfigHandler(deps.config));
 
   app.get("/api/market/overview", validate(overviewQuerySchema(deps.config)), getOverview(deps.marketService));
 

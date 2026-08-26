@@ -16,7 +16,7 @@ export function getOverview(marketService: MarketService) {
   };
 }
 
-export function getUiConfig(config: Config) {
+export function createUiConfigHandler(config: Config) {
   return (_req: Request, res: Response): void => {
     res.json({
       currency: config.defaultCurrency,

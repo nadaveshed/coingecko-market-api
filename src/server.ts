@@ -11,7 +11,6 @@ import { TtlCache, BoundedLimiter, Singleflight, RateLimiter, createLogger } fro
 
 const PUBLIC_DIR = fileURLToPath(new URL("../public", import.meta.url));
 
-/** Builds the wired app without binding a port, so tests can drive it in-process. */
 export async function createApp(options: AppOptions = {}): Promise<Express> {
   const config = loadConfig(options.config);
   const level =
